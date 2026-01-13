@@ -18,4 +18,3 @@ const testConnection = async () => {
 testConnection().then(() => {
 	app.listen(PORT);
 });
-

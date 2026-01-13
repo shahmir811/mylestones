@@ -134,10 +134,44 @@ const finalizeAlbum = async (req, res) => {
 	}
 };
 
+const previewAlbum = async (req, res) => {
+	try {
+		const albumId = req.params.albumId;
+		const userId = req.user.id;
+
+		// Verify ownership
+		await albumService.previewAlbum(albumId, userId);
+
+		// Generate preview PDF (same as print order but doesn't save to database)
+		const pdfService = require('../services/pdf.service');
+		const baseUrl = process.env.APP_API_URL || process.env.BASE_URL || 'http://localhost:3000';
+		const pdfUrl = await pdfService.generateAlbumPDF(albumId, baseUrl);
+
+		res.json({ pdf_url: pdfUrl });
+	} catch (error) {
+		console.error('Preview album error:', error);
+
+		if (error.message.includes('not found')) {
+			return res.status(404).json({ error: error.message });
+		}
+
+		if (error.message.includes('Access denied')) {
+			return res.status(403).json({ error: error.message });
+		}
+
+		if (error.message.includes('No approved photos') || error.message.includes('No photos with valid')) {
+			return res.status(400).json({ error: error.message });
+		}
+
+		res.status(500).json({ error: 'Failed to generate preview' });
+	}
+};
+
 module.exports = {
 	getAlbum,
 	updatePhoto,
 	reorderPhotos,
 	finalizeAlbum,
+	previewAlbum,
 };
 

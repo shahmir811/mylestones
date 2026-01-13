@@ -5,10 +5,6 @@ if (!process.env.RESEND_API_KEY) {
 	throw new Error('RESEND_API_KEY environment variable is required');
 }
 
-if (!process.env.APP_BASE_URL) {
-	throw new Error('APP_BASE_URL environment variable is required');
-}
-
 if (!process.env.FROM_EMAIL) {
 	throw new Error('FROM_EMAIL environment variable is required');
 }
@@ -16,8 +12,11 @@ if (!process.env.FROM_EMAIL) {
 // Initialize Resend with API key
 // Note: FROM_EMAIL must be onboarding@resend.dev unless a custom domain is verified
 const resend = new Resend(process.env.RESEND_API_KEY);
-const APP_BASE_URL = process.env.APP_BASE_URL;
+// Use APP_FRONTEND_URL for email links (frontend serves the upload page)
+// Fallback to APP_BASE_URL for backward compatibility, then default to port 3001
+const FRONTEND_URL = process.env.APP_FRONTEND_URL || process.env.APP_BASE_URL || 'http://localhost:3001';
 const FROM_EMAIL = process.env.FROM_EMAIL;
+
 
 /**
  * Sends an invite email using Resend
@@ -30,7 +29,7 @@ const FROM_EMAIL = process.env.FROM_EMAIL;
  * @throws {Error} If email sending fails
  */
 const sendInviteEmail = async ({ to, event, token, ownerName }) => {
-	const inviteUrl = `${APP_BASE_URL}/upload/${token}`;
+	const inviteUrl = `${FRONTEND_URL}/upload/${token}`;
 
 	const html = `
 <!DOCTYPE html>
@@ -76,8 +75,6 @@ Upload photos: ${inviteUrl}
 If the link doesn't work, copy and paste it into your browser.
 	`.trim();
 
-	console.log(`[EMAIL] Attempting to send invite email to ${to}`);
-
 	const { data, error } = await resend.emails.send({
 		from: FROM_EMAIL,
 		to,
@@ -89,8 +86,6 @@ If the link doesn't work, copy and paste it into your browser.
 		console.error(`[EMAIL] Failed to send invite email to ${to}:`, error);
 		throw error;
 	}
-
-	console.log(`[EMAIL] Invite email queued successfully to ${to} (ID: ${data?.id})`);
 
 	return { success: true, data };
 };

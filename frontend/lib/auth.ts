@@ -19,6 +19,13 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface RegisterCredentials {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+}
+
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
@@ -42,6 +49,19 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
   const response = await apiRequest<LoginResponse>('/auth/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
+  });
+  
+  setToken(response.token);
+  return response;
+}
+
+export async function register(credentials: RegisterCredentials): Promise<LoginResponse> {
+  const response = await apiRequest<LoginResponse>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...credentials,
+      role: credentials.role || 'creator', // Default to 'creator' if not provided
+    }),
   });
   
   setToken(response.token);

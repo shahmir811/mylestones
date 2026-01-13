@@ -23,3 +23,5 @@ backend/dist/
 
 frontend/build/
 backend/build/
+
+sql_scripts/

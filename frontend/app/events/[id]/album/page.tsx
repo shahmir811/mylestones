@@ -103,7 +103,7 @@ function BookPage({
 	isLocked: boolean;
 }) {
 	const { setNodeRef, isOver } = useDroppable({
-		id: `page-${page.position}`,
+		id: `book-page-${page.position}`,
 		disabled: isLocked,
 	});
 
@@ -138,18 +138,20 @@ function BookPage({
 function PageThumbnail({
 	page,
 	pageNumber,
+	pageIndex,
 	isActive,
 	onClick,
 	isLocked,
 }: {
 	page: Page;
 	pageNumber: number;
+	pageIndex: number;
 	isActive: boolean;
 	onClick: () => void;
 	isLocked: boolean;
 }) {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-		id: `page-${page.position}`,
+		id: `page-${pageIndex}`,
 		disabled: isLocked,
 	});
 
@@ -286,6 +288,8 @@ export default function AlbumEditorPage() {
 	const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
 	const [showPrintModal, setShowPrintModal] = useState(false);
 	const [isPrinting, setIsPrinting] = useState(false);
+	const [isPreviewing, setIsPreviewing] = useState(false);
+	const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
 	const [shippingAddress, setShippingAddress] = useState('');
 	const [event, setEvent] = useState<Event | null>(null);
 	const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -294,6 +298,31 @@ export default function AlbumEditorPage() {
 	// Refs to ensure handlers always use latest state
 	const pagesRef = useRef<Page[]>([]);
 	const approvedPhotosRef = useRef<Photo[]>([]);
+
+	// Helper function to normalize pages: remove empty pages from middle, keep only one at end
+	const normalizePages = (pageList: Page[]): Page[] => {
+		// Separate pages with photos and empty pages
+		const pagesWithPhotos = pageList.filter(p => p.photo);
+		const emptyPages = pageList.filter(p => !p.photo);
+
+		// Update positions for pages with photos (sequential: 1, 2, 3, ...)
+		const normalizedPages = pagesWithPhotos.map((page, idx) => ({
+			...page,
+			position: idx + 1,
+		}));
+
+		// Add exactly one empty page at the end if we have any photos
+		// (if no photos, we'll add one empty page in the initial state)
+		if (normalizedPages.length > 0) {
+			const maxPosition = Math.max(...normalizedPages.map(p => p.position), 0);
+			normalizedPages.push({ position: maxPosition + 1 });
+		} else if (normalizedPages.length === 0 && pageList.length === 0) {
+			// If completely empty, add one empty page
+			normalizedPages.push({ position: 1 });
+		}
+
+		return normalizedPages;
+	};
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -346,16 +375,9 @@ export default function AlbumEditorPage() {
 				photo,
 			}));
 
-			// Ensure at least one empty page if no pages exist
-			if (pageList.length === 0) {
-				pageList.push({ position: 1 });
-			} else {
-				// Add an empty page at the end for adding new photos
-				const maxPosition = Math.max(...pageList.map(p => p.position));
-				pageList.push({ position: maxPosition + 1 });
-			}
-
-			setPages(pageList);
+			// Normalize pages (ensures exactly one empty page at end, removes any from middle)
+			const normalizedPages = normalizePages(pageList);
+			setPages(normalizedPages);
 
 			// Set pdf_url if available
 			if (data.pdf_url) {
@@ -434,19 +456,24 @@ export default function AlbumEditorPage() {
 
 		// Handle page reordering
 		if (active.id.toString().startsWith('page-') && over.id.toString().startsWith('page-')) {
-			const oldIndex = currentPages.findIndex(p => `page-${p.position}` === active.id);
-			const newIndex = currentPages.findIndex(p => `page-${p.position}` === over.id);
+			// Extract index from ID (format: "page-0", "page-1", etc.)
+			const oldIndex = parseInt(active.id.toString().replace('page-', ''));
+			const newIndex = parseInt(over.id.toString().replace('page-', ''));
 
 			if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-				const newPages = arrayMove(currentPages, oldIndex, newIndex);
-				// Update positions
-				const updatedPages = newPages.map((page, idx) => ({
-					...page,
-					position: idx + 1,
-				}));
-				setPages(updatedPages);
-				// Persist in background without blocking
-				persistReorder(updatedPages).catch(console.error);
+				// Filter out empty pages before reordering (only reorder pages with photos)
+				const pagesWithPhotos = currentPages.filter(p => p.photo);
+				const emptyPages = currentPages.filter(p => !p.photo);
+				
+				// Only reorder if both indices are within the pagesWithPhotos array
+				if (oldIndex < pagesWithPhotos.length && newIndex < pagesWithPhotos.length) {
+					const reorderedPhotos = arrayMove(pagesWithPhotos, oldIndex, newIndex);
+					// Normalize pages (update positions and add one empty page at end)
+					const normalizedPages = normalizePages(reorderedPhotos);
+					setPages(normalizedPages);
+					// Persist in background without blocking (only pages with photos)
+					persistReorder(normalizedPages.filter(p => p.photo)).catch(console.error);
+				}
 			}
 			return;
 		}
@@ -455,37 +482,49 @@ export default function AlbumEditorPage() {
 		if (
 			active.id.toString().startsWith('photo-') &&
 			!active.id.toString().startsWith('page-photo-') &&
-			over?.id?.toString().startsWith('page-')
+			(over?.id?.toString().startsWith('page-') || over?.id?.toString().startsWith('book-page-'))
 		) {
 			const photoId = active.id.toString().replace('photo-', '');
 			const photo = currentApprovedPhotos.find(p => p.id === photoId);
 			if (!photo) return;
 
-			const pagePosition = parseInt(over.id.toString().replace('page-', ''));
-			const pageIndex = currentPages.findIndex(p => p.position === pagePosition);
-
-			if (pageIndex !== -1) {
-				const newPages = [...currentPages];
-				// Remove photo from other pages
-				newPages.forEach(p => {
-					if (p.photo?.id === photoId) {
-						p.photo = undefined;
-					}
-				});
-				// Add photo to target page
-				newPages[pageIndex].photo = photo;
-
-				// Ensure there's always an empty page at the end for adding more photos
-				const hasEmptyPage = newPages.some((p, idx) => !p.photo && idx === newPages.length - 1);
-				if (!hasEmptyPage) {
-					const maxPosition = Math.max(...newPages.map(p => p.position));
-					newPages.push({ position: maxPosition + 1 });
-				}
-
-				setPages(newPages);
-				// Persist in background without blocking
-				persistReorder(newPages.filter(p => p.photo)).catch(console.error);
+			// Extract index from ID (format: "page-0", "page-1", or "book-page-1")
+			let pageIndex: number;
+			if (over.id.toString().startsWith('book-page-')) {
+				// For book page, find by position
+				const pagePosition = parseInt(over.id.toString().replace('book-page-', ''));
+				pageIndex = currentPages.findIndex(p => p.position === pagePosition);
+			} else {
+				// For thumbnails, use index directly
+				pageIndex = parseInt(over.id.toString().replace('page-', ''));
 			}
+
+			// Validate pageIndex is valid
+			if (pageIndex === -1 || pageIndex < 0 || pageIndex >= currentPages.length) {
+				console.warn(`Invalid pageIndex: ${pageIndex}, pages length: ${currentPages.length}`);
+				return;
+			}
+
+			const newPages = [...currentPages];
+			// Remove photo from other pages
+			newPages.forEach(p => {
+				if (p.photo?.id === photoId) {
+					p.photo = undefined;
+				}
+			});
+			// Add photo to target page (ensure page exists)
+			if (newPages[pageIndex]) {
+				newPages[pageIndex].photo = photo;
+			} else {
+				console.error(`Page at index ${pageIndex} does not exist`);
+				return;
+			}
+
+			// Normalize pages (remove empty pages from middle, keep one at end)
+			const normalizedPages = normalizePages(newPages);
+			setPages(normalizedPages);
+			// Persist in background without blocking
+			persistReorder(normalizedPages.filter(p => p.photo)).catch(console.error);
 			return;
 		}
 
@@ -514,13 +553,11 @@ export default function AlbumEditorPage() {
 				newPages.push({ position: newPosition, photo });
 			}
 
-			// Always ensure there's an empty page at the end for adding more photos
-			const maxPosition = Math.max(...newPages.map(p => p.position));
-			newPages.push({ position: maxPosition + 1 });
-
-			setPages(newPages);
+			// Normalize pages (remove empty pages from middle, keep one at end)
+			const normalizedPages = normalizePages(newPages);
+			setPages(normalizedPages);
 			// Persist in background without blocking
-			persistReorder(newPages.filter(p => p.photo)).catch(console.error);
+			persistReorder(normalizedPages.filter(p => p.photo)).catch(console.error);
 		}
 	};
 
@@ -530,11 +567,18 @@ export default function AlbumEditorPage() {
 		// Only include pages with photos, sorted by position
 		const pagesWithPhotos = pageList.filter(p => p.photo).sort((a, b) => a.position - b.position);
 
-		const photoIds = pagesWithPhotos.map(p => p.photo!.id);
+		// Map to photo IDs and remove duplicates
+		const photoIds = [...new Set(pagesWithPhotos.map(p => p.photo!.id).filter(id => id != null && id !== ''))];
 
 		// Backend doesn't accept empty arrays, so skip if no photos
 		if (photoIds.length === 0) {
 			return;
+		}
+
+		// Log warning if duplicates were removed
+		const allPhotoIds = pagesWithPhotos.map(p => p.photo!.id);
+		if (photoIds.length !== allPhotoIds.length) {
+			console.warn(`[ALBUM] Removed ${allPhotoIds.length - photoIds.length} duplicate photo IDs before sending to backend`);
 		}
 
 		try {
@@ -550,26 +594,9 @@ export default function AlbumEditorPage() {
 				}
 			);
 			// Don't refresh - state is already updated, just sync positions
-			// Update positions in local state to match backend, but preserve empty pages
-			const updatedPages = pageList.map((page, idx) => {
-				if (page.photo) {
-					const photoIndex = photoIds.findIndex(id => id === page.photo!.id);
-					return {
-						...page,
-						position: photoIndex !== -1 ? photoIndex + 1 : page.position,
-					};
-				}
-				return page;
-			});
-
-			// Ensure there's always an empty page at the end
-			const hasEmptyPage = updatedPages.some((p, idx) => !p.photo && idx === updatedPages.length - 1);
-			if (!hasEmptyPage) {
-				const maxPosition = Math.max(...updatedPages.map(p => p.position), 0);
-				updatedPages.push({ position: maxPosition + 1 });
-			}
-
-			setPages(updatedPages);
+			// Normalize pages after backend update (remove empty pages from middle, keep one at end)
+			const normalizedPages = normalizePages(pageList);
+			setPages(normalizedPages);
 		} catch (err) {
 			console.error('Failed to reorder:', err);
 			// Only refresh on error to restore state
@@ -600,16 +627,39 @@ export default function AlbumEditorPage() {
 		const newPages = [...pages];
 		newPages[pageIndex].photo = undefined;
 
-		// Ensure there's always an empty page at the end
-		const hasEmptyPage = newPages.some((p, idx) => !p.photo && idx === newPages.length - 1);
-		if (!hasEmptyPage) {
-			const maxPosition = Math.max(...newPages.map(p => p.position), 0);
-			newPages.push({ position: maxPosition + 1 });
-		}
-
-		setPages(newPages);
+		// Normalize pages (remove empty pages from middle, keep one at end)
+		const normalizedPages = normalizePages(newPages);
+		setPages(normalizedPages);
 		// Persist in background without blocking
 		persistReorder(newPages.filter(p => p.photo)).catch(console.error);
+	};
+
+	const handlePreview = async () => {
+		if (!album) return;
+
+		try {
+			setIsPreviewing(true);
+			const response = await authenticatedRequest<{ pdf_url: string }>(
+				`/albums/${album.id}/preview`,
+				{
+					method: 'POST',
+				},
+				() => {
+					router.push('/login');
+				}
+			);
+			setPreviewPdfUrl(response.pdf_url);
+			// Open preview in new window
+			const fullUrl = response.pdf_url.startsWith('http')
+				? response.pdf_url
+				: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${response.pdf_url}`;
+			window.open(`${fullUrl}#zoom=100`, '_blank');
+		} catch (err) {
+			console.error('Failed to generate preview:', err);
+			alert(err instanceof Error ? err.message : 'Failed to generate preview');
+		} finally {
+			setIsPreviewing(false);
+		}
 	};
 
 	const handleFinalize = async () => {
@@ -741,12 +791,20 @@ export default function AlbumEditorPage() {
 						</div>
 						<div className='flex gap-2'>
 							{!isLocked && (
-								<button
-									onClick={() => setShowFinalizeConfirm(true)}
-									disabled={pages.filter(p => p.photo).length === 0}
-									className='px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'>
-									Finalize Album
-								</button>
+								<>
+									<button
+										onClick={handlePreview}
+										disabled={isPreviewing || pages.filter(p => p.photo).length === 0}
+										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+										{isPreviewing ? 'Generating Preview...' : 'Preview Album'}
+									</button>
+									<button
+										onClick={() => setShowFinalizeConfirm(true)}
+										disabled={pages.filter(p => p.photo).length === 0}
+										className='px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+										Finalize Album
+									</button>
+								</>
 							)}
 							{canPrint && (
 								<>
@@ -913,12 +971,13 @@ export default function AlbumEditorPage() {
 						{/* Page Thumbnails */}
 						<div className='mt-6'>
 							<div className='flex gap-2 justify-center overflow-x-auto pb-2'>
-								<SortableContext items={pages.map(p => `page-${p.position}`)} strategy={horizontalListSortingStrategy}>
+								<SortableContext items={pages.map((p, idx) => `page-${idx}`)} strategy={horizontalListSortingStrategy}>
 									{pages.map((page, index) => (
 										<PageThumbnail
-											key={page.position}
+											key={`page-${index}`}
 											page={page}
 											pageNumber={page.position}
+											pageIndex={index}
 											isActive={index === currentPageIndex}
 											onClick={() => handlePageClick(index)}
 											isLocked={isLocked}

@@ -13,6 +13,9 @@ router.patch('/photos/:id', authenticate, checkPhotoOwnership, albumController.u
 // Reorder photos in album - protected, owner only
 router.post('/albums/:albumId/reorder', authenticate, checkAlbumOwnership, albumController.reorderPhotos);
 
+// Preview album (generate PDF without finalizing) - protected, owner only
+router.post('/albums/:albumId/preview', authenticate, checkAlbumOwnership, albumController.previewAlbum);
+
 // Finalize album - protected, owner only
 router.post('/albums/:albumId/finalize', authenticate, checkAlbumOwnership, albumController.finalizeAlbum);
 

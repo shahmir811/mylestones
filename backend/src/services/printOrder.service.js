@@ -60,8 +60,9 @@ const createPrintOrder = async (userId, orderData) => {
 		}
 
 		// Generate PDF for the album
-		// Use localhost as base URL (in production, use actual domain)
-		const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+		// Use APP_API_URL for image URLs (backend serves the images)
+		// Fallback to BASE_URL for backward compatibility, then default to port 3000
+		const baseUrl = process.env.APP_API_URL || process.env.BASE_URL || 'http://localhost:3000';
 		const pdfUrl = await pdfService.generateAlbumPDF(album_id, baseUrl);
 
 		// Create print order

@@ -133,6 +133,17 @@ const reorderPhotos = async (albumId, userId, photoIds) => {
 		throw new Error('photo_ids must be a non-empty array');
 	}
 
+	// Remove duplicates and filter out null/undefined values
+	const uniquePhotoIds = [...new Set(photoIds.filter(id => id != null && id !== ''))];
+
+	if (uniquePhotoIds.length === 0) {
+		throw new Error('photo_ids must contain at least one valid photo ID');
+	}
+
+	if (uniquePhotoIds.length !== photoIds.length) {
+		console.warn(`[ALBUM] Removed ${photoIds.length - uniquePhotoIds.length} duplicate or invalid photo IDs`);
+	}
+
 	const client = await pool.connect();
 
 	try {
@@ -160,13 +171,13 @@ const reorderPhotos = async (albumId, userId, photoIds) => {
 		const eventId = eventIdResult.rows[0].event_id;
 
 		const photosCheck = await client.query(
-			`SELECT id, approved
+			`SELECT id, approved, file_url
 			 FROM photos
 			 WHERE id = ANY($1::uuid[]) AND event_id = $2`,
-			[photoIds, eventId]
+			[uniquePhotoIds, eventId]
 		);
 
-		if (photosCheck.rows.length !== photoIds.length) {
+		if (photosCheck.rows.length !== uniquePhotoIds.length) {
 			throw new Error('One or more photo IDs are invalid or do not belong to this event');
 		}
 
@@ -176,21 +187,28 @@ const reorderPhotos = async (albumId, userId, photoIds) => {
 			throw new Error('Only approved photos can be added to the album');
 		}
 
-		// Remove existing album_photos entries for this album
+		// Check all photos have valid file_url
+		const invalidPhotos = photosCheck.rows.filter((p) => !p.file_url || p.file_url.trim() === '');
+		if (invalidPhotos.length > 0) {
+			throw new Error('One or more photos have invalid file URLs');
+		}
+
+		// Remove ALL existing album_photos entries for this album
+		// This ensures we start fresh and avoid duplicate position conflicts
 		await client.query('DELETE FROM album_photos WHERE album_id = $1', [albumId]);
 
-		// Insert new positions
-		for (let i = 0; i < photoIds.length; i++) {
+		// Insert new positions (only valid, unique photos)
+		for (let i = 0; i < uniquePhotoIds.length; i++) {
 			await client.query(
 				`INSERT INTO album_photos (album_id, photo_id, position)
 				 VALUES ($1, $2, $3)`,
-				[albumId, photoIds[i], i + 1]
+				[albumId, uniquePhotoIds[i], i + 1]
 			);
 		}
 
 		await client.query('COMMIT');
 
-		return { success: true, photosReordered: photoIds.length };
+		return { success: true, photosReordered: uniquePhotoIds.length };
 	} catch (error) {
 		await client.query('ROLLBACK');
 		throw error;
@@ -246,10 +264,32 @@ const finalizeAlbum = async (albumId, userId) => {
 	}
 };
 
+const previewAlbum = async (albumId, userId) => {
+	// Verify album ownership
+	const albumCheck = await query(
+		`SELECT a.id, a.event_id, e.creator_id
+		 FROM albums a
+		 JOIN events e ON e.id = a.event_id
+		 WHERE a.id = $1`,
+		[albumId]
+	);
+
+	if (albumCheck.rows.length === 0) {
+		throw new Error('Album not found');
+	}
+
+	if (albumCheck.rows[0].creator_id !== userId) {
+		throw new Error('Access denied. Only event owner can preview album.');
+	}
+
+	return { success: true, albumId };
+};
+
 module.exports = {
 	getAlbumByEventId,
 	updatePhoto,
 	reorderPhotos,
 	finalizeAlbum,
+	previewAlbum,
 };
 

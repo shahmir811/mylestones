@@ -73,13 +73,13 @@ export default function NewEventPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <main className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">Create Event</h1>
+        <h1 className="text-3xl font-semibold mb-8 text-slate-900">Create Event</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-1">
+            <label htmlFor="title" className="block text-sm font-medium mb-2 text-slate-700">
               Title *
             </label>
             <input
@@ -88,12 +88,12 @@ export default function NewEventPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="person_name" className="block text-sm font-medium mb-1">
+            <label htmlFor="person_name" className="block text-sm font-medium mb-2 text-slate-700">
               Person Name *
             </label>
             <input
@@ -102,12 +102,12 @@ export default function NewEventPage() {
               value={personName}
               onChange={(e) => setPersonName(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="event_type" className="block text-sm font-medium mb-1">
+            <label htmlFor="event_type" className="block text-sm font-medium mb-2 text-slate-700">
               Event Type *
             </label>
             <select
@@ -115,7 +115,7 @@ export default function NewEventPage() {
               value={eventType}
               onChange={(e) => setEventType(e.target.value as 'celebration' | 'remembrance')}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white"
             >
               <option value="celebration">Celebration</option>
               <option value="remembrance">Remembrance</option>
@@ -123,7 +123,7 @@ export default function NewEventPage() {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
+            <label htmlFor="description" className="block text-sm font-medium mb-2 text-slate-700">
               Description (optional)
             </label>
             <textarea
@@ -131,28 +131,28 @@ export default function NewEventPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm">
+            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
               {error}
             </div>
           )}
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-2">
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm"
             >
               {isLoading ? 'Creating...' : 'Create Event'}
             </button>
             <button
               type="button"
               onClick={() => router.push('/events')}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors text-slate-700 bg-white"
             >
               Cancel
             </button>

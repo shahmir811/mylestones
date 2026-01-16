@@ -34,22 +34,23 @@ export default function Header() {
 
   if (!authenticated) {
     // Show navigation for unauthenticated users
-    if (pathname === '/login' || pathname === '/register') {
-      return null; // Don't show header on login/register pages
+    // Don't show header on login/register pages or upload pages
+    if (pathname === '/login' || pathname === '/register' || pathname?.startsWith('/upload/')) {
+      return null;
     }
     return (
-      <header className="w-full border-b border-gray-200 bg-white">
+      <header className="w-full border-b border-slate-200 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-end items-center h-16 gap-4">
             <Link
               href="/login"
-              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+              className="text-sm text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg transition-colors font-medium"
             >
               Login
             </Link>
             <Link
               href="/register"
-              className="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
+              className="text-sm bg-blue-600 text-white hover:bg-blue-700 px-5 py-2 rounded-lg transition-colors font-medium shadow-sm"
             >
               Sign Up
             </Link>
@@ -60,12 +61,12 @@ export default function Header() {
   }
 
   return (
-    <header className="w-full border-b border-gray-200 bg-white">
+    <header className="w-full border-b border-slate-200 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-end items-center h-16">
           <button
             onClick={handleLogout}
-            className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+            className="text-sm text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg transition-colors font-medium"
           >
             Log out
           </button>

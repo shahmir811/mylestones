@@ -148,9 +148,9 @@ export default function UploadPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-8">
         <div className="text-center">
-          <div className="text-gray-600">Loading...</div>
+          <div className="text-slate-600 bg-white rounded-xl border border-slate-200 shadow-sm px-8 py-6">Loading...</div>
         </div>
       </div>
     );
@@ -158,10 +158,10 @@ export default function UploadPage() {
 
   if (error || !invite) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-md w-full text-center">
-          <div className="text-red-600 mb-4">{error || 'Invalid invite link'}</div>
-          <p className="text-gray-600 text-sm">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-8">
+        <div className="max-w-md w-full text-center bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="text-red-600 mb-4 bg-red-50 border border-red-200 rounded-lg p-3">{error || 'Invalid invite link'}</div>
+          <p className="text-slate-600 text-sm">
             The invite link may be invalid, expired, or has already been used. Please contact the event organizer for a new link.
           </p>
         </div>
@@ -171,13 +171,13 @@ export default function UploadPage() {
 
   if (uploadSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-md w-full text-center">
-          <div className="text-green-600 mb-4 text-lg font-semibold">Thank you!</div>
-          <p className="text-gray-700 mb-2">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-8">
+        <div className="max-w-md w-full text-center bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+          <div className="text-green-600 mb-4 text-2xl font-semibold">Thank you!</div>
+          <p className="text-slate-700 mb-2 font-medium">
             Your memories have been successfully uploaded.
           </p>
-          <p className="text-gray-600 text-sm">
+          <p className="text-slate-600 text-sm">
             Your contributions will help create a beautiful collection for {invite.person_name}.
           </p>
         </div>
@@ -189,38 +189,38 @@ export default function UploadPage() {
   const canUpload = invite.status === 'collecting';
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50">
+    <div className="min-h-screen bg-slate-50 p-8">
       <main className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h1 className="text-3xl font-semibold text-slate-900 mb-2">
               Share Your Memories
             </h1>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               We're collecting memories for <span className="font-medium">{invite.person_name}</span>'s {eventTypeText}
             </p>
-            <p className="text-gray-500 text-sm">
+            <p className="text-slate-500 text-sm">
               {invite.title}
             </p>
           </div>
 
           {!canUpload && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-              <p className="text-yellow-800 text-sm">
+              <p className="text-yellow-800 text-sm font-medium">
                 This event is no longer accepting contributions. The collection phase has ended.
               </p>
             </div>
           )}
 
           {canUpload && (
-            <p className="text-gray-700 mb-6 text-center">
+            <p className="text-slate-700 mb-6 text-center">
               Please share your photos and memories. Each photo can include an optional caption to help tell the story.
             </p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
                 Your Name (optional)
               </label>
               <input
@@ -230,12 +230,12 @@ export default function UploadPage() {
                 onChange={(e) => setContributorName(e.target.value)}
                 placeholder="How would you like to be credited?"
                 disabled={!canUpload || isUploading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="photos" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="photos" className="block text-sm font-medium text-slate-700 mb-2">
                 Photos *
               </label>
               <input
@@ -245,27 +245,27 @@ export default function UploadPage() {
                 multiple
                 onChange={handlePhotoChange}
                 disabled={!canUpload || isUploading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed transition-colors"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-slate-500">
                 You can select multiple photos at once. Maximum 20 photos, 10MB each.
               </p>
             </div>
 
             {photos.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700">Selected Photos</h3>
+                <h3 className="text-sm font-medium text-slate-700">Selected Photos</h3>
                 {photos.map((photo, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div key={index} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
                     <div className="flex gap-4">
                       <img
                         src={photo.preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-24 h-24 object-cover rounded"
+                        className="w-24 h-24 object-cover rounded-lg"
                       />
                       <div className="flex-1">
                         <div className="mb-2">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label className="block text-xs font-medium text-slate-700 mb-1">
                             Caption (optional)
                           </label>
                           <input
@@ -274,13 +274,13 @@ export default function UploadPage() {
                             onChange={(e) => updatePhotoCaption(index, e.target.value)}
                             placeholder="Add a caption..."
                             disabled={!canUpload || isUploading}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed transition-colors"
                           />
                         </div>
                         <button
                           type="button"
                           onClick={() => removePhoto(index)}
-                          className="text-xs text-red-600 hover:text-red-700"
+                          className="text-xs text-red-600 hover:text-red-700 font-medium"
                         >
                           Remove
                         </button>
@@ -292,7 +292,7 @@ export default function UploadPage() {
             )}
 
             {uploadError && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
+              <div className="text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-lg">
                 {uploadError}
               </div>
             )}
@@ -300,7 +300,7 @@ export default function UploadPage() {
             <button
               type="submit"
               disabled={!canUpload || isUploading || photos.length === 0}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm"
             >
               {isUploading ? 'Uploading memories...' : 'Upload memories'}
             </button>

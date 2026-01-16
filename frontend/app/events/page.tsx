@@ -60,28 +60,32 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <main className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">Events</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-semibold text-slate-900">Events</h1>
           <Link
             href="/events/new"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
           >
             Create Event
           </Link>
         </div>
 
         {isLoading && (
-          <div className="text-center py-8 text-gray-600">Loading events...</div>
+          <div className="text-center py-12 text-slate-600 bg-white rounded-xl border border-slate-200 shadow-sm">
+            Loading events...
+          </div>
         )}
 
         {error && (
-          <div className="text-red-600 py-4">{error}</div>
+          <div className="text-red-600 py-4 bg-red-50 border border-red-200 rounded-lg p-4">{error}</div>
         )}
 
         {!isLoading && !error && events.length === 0 && (
-          <div className="text-center py-8 text-gray-600">No events yet</div>
+          <div className="text-center py-12 text-slate-600 bg-white rounded-xl border border-slate-200 shadow-sm">
+            No events yet. Create your first event to get started!
+          </div>
         )}
 
         {!isLoading && !error && events.length > 0 && (
@@ -90,15 +94,15 @@ export default function EventsPage() {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                className="block border border-slate-200 rounded-xl p-6 bg-white hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-lg font-semibold">{event.title}</h2>
-                    <p className="text-gray-600 mt-1">Person: {event.person_name}</p>
-                    <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                      <span>Type: {event.event_type}</span>
-                      <span>Status: {event.status}</span>
+                    <h2 className="text-xl font-semibold text-slate-900 mb-2">{event.title}</h2>
+                    <p className="text-slate-600 mb-3">Person: {event.person_name}</p>
+                    <div className="flex gap-4 text-sm text-slate-500">
+                      <span className="capitalize">Type: {event.event_type}</span>
+                      <span className="capitalize">Status: {event.status}</span>
                     </div>
                   </div>
                 </div>

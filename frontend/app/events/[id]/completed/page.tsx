@@ -95,20 +95,20 @@ export default function CompletedPage() {
 
 	if (isLoading) {
 		return (
-			<div className='min-h-screen flex items-center justify-center'>
-				<div className='text-gray-600'>Loading...</div>
+			<div className='min-h-screen flex items-center justify-center bg-slate-50'>
+				<div className='text-slate-600 bg-white rounded-xl border border-slate-200 shadow-sm px-8 py-6'>Loading...</div>
 			</div>
 		);
 	}
 
 	if (error || !event) {
 		return (
-			<div className='min-h-screen p-8'>
+			<div className='min-h-screen bg-slate-50 p-8'>
 				<div className='max-w-4xl mx-auto'>
-					<div className='text-red-600 mb-4'>{error || 'Event not found'}</div>
+					<div className='text-red-600 mb-4 bg-red-50 border border-red-200 rounded-lg p-4'>{error || 'Event not found'}</div>
 					<button
 						onClick={() => router.push(`/events/${eventId}`)}
-						className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50'>
+						className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors'>
 						Back to Event
 					</button>
 				</div>
@@ -124,33 +124,33 @@ export default function CompletedPage() {
 	};
 
 	return (
-		<div className='min-h-screen bg-gray-50 flex items-center justify-center p-8'>
-			<div className='max-w-2xl w-full bg-white rounded-lg shadow-sm border border-gray-200 p-8'>
+		<div className='min-h-screen bg-slate-50 flex items-center justify-center p-8'>
+			<div className='max-w-2xl w-full bg-white rounded-xl shadow-sm border border-slate-200 p-8'>
 				<div className='text-center mb-8'>
-					<div className='text-4xl mb-4'>✓</div>
-					<h1 className='text-2xl font-semibold text-gray-900 mb-2'>Album Sent to Print</h1>
-					<p className='text-gray-600'>Your album has been successfully submitted for printing.</p>
+					<div className='text-5xl mb-4 text-green-600'>✓</div>
+					<h1 className='text-3xl font-semibold text-slate-900 mb-2'>Album Sent to Print</h1>
+					<p className='text-slate-600'>Your album has been successfully submitted for printing.</p>
 				</div>
 
 				<div className='space-y-6 mb-8'>
 					{album && (
-						<div className='border-b border-gray-200 pb-4'>
-							<label className='block text-sm font-medium text-gray-700 mb-1'>Album</label>
-							<p className='text-gray-900'>{album.title}</p>
+						<div className='border-b border-slate-200 pb-4'>
+							<label className='block text-sm font-medium text-slate-500 mb-1'>Album</label>
+							<p className='text-slate-900 font-medium'>{album.title}</p>
 						</div>
 					)}
-					<div className='border-b border-gray-200 pb-4'>
-						<label className='block text-sm font-medium text-gray-700 mb-1'>Event</label>
-						<p className='text-gray-900'>{event.title}</p>
+					<div className='border-b border-slate-200 pb-4'>
+						<label className='block text-sm font-medium text-slate-500 mb-1'>Event</label>
+						<p className='text-slate-900 font-medium'>{event.title}</p>
 					</div>
 
-					<div className='border-b border-gray-200 pb-4'>
-						<label className='block text-sm font-medium text-gray-700 mb-1'>Print Status</label>
-						<p className='text-gray-900'>{getStatusDisplay()}</p>
+					<div className='border-b border-slate-200 pb-4'>
+						<label className='block text-sm font-medium text-slate-500 mb-1'>Print Status</label>
+						<p className='text-slate-900 font-medium'>{getStatusDisplay()}</p>
 					</div>
 
-					<div className='bg-gray-50 border border-gray-200 rounded-md p-4'>
-						<p className='text-sm text-gray-700'>
+					<div className='bg-slate-50 border border-slate-200 rounded-lg p-4'>
+						<p className='text-sm text-slate-700'>
 							<strong>This album is locked.</strong> No further edits can be made.
 						</p>
 					</div>
@@ -159,7 +159,7 @@ export default function CompletedPage() {
 				<div className='flex justify-center'>
 					<button
 						onClick={() => router.push(`/events/${eventId}`)}
-						className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50'>
+						className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors'>
 						Back to Event
 					</button>
 				</div>

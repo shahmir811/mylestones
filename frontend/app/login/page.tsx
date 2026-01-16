@@ -34,13 +34,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <main className="w-full max-w-md space-y-8 rounded-lg border border-gray-200 p-8">
-        <h1 className="text-2xl font-semibold text-center">Login</h1>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+      <main className="w-full max-w-md space-y-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 className="text-3xl font-semibold text-center text-slate-900">Login</h1>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
+            <label htmlFor="email" className="block text-sm font-medium mb-2 text-slate-700">
               Email
             </label>
             <input
@@ -49,12 +49,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
+            <label htmlFor="password" className="block text-sm font-medium mb-2 text-slate-700">
               Password
             </label>
             <input
@@ -63,12 +63,12 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm">
+            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
               {error}
             </div>
           )}
@@ -76,14 +76,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm"
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <div className="text-center text-sm text-gray-600">
-          <Link href="/register" className="text-blue-600 hover:text-blue-700">
+        <div className="text-center text-sm text-slate-600">
+          <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
             Don't have an account? Sign up
           </Link>
         </div>

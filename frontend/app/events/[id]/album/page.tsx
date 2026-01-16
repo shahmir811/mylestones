@@ -248,9 +248,9 @@ function PhotoTray({ photos, pages, isLocked }: { photos: Photo[]; pages: Page[]
 
 	if (photos.length === 0) {
 		return (
-			<div className='bg-white border-t border-gray-200 p-4'>
-				<h3 className='text-sm font-medium text-gray-700 mb-3'>Photo Tray</h3>
-				<p className='text-gray-500 text-sm'>
+			<div className='bg-white border-t border-slate-200 p-4 shadow-sm'>
+				<h3 className='text-sm font-medium text-slate-700 mb-3'>Photo Tray</h3>
+				<p className='text-slate-500 text-sm'>
 					No approved photos yet. Photos need to be approved before they can be added to the album.
 				</p>
 			</div>
@@ -258,8 +258,8 @@ function PhotoTray({ photos, pages, isLocked }: { photos: Photo[]; pages: Page[]
 	}
 
 	return (
-		<div className='bg-white border-t border-gray-200 p-4'>
-			<h3 className='text-sm font-medium text-gray-700 mb-3'>
+		<div className='bg-white border-t border-slate-200 p-4 shadow-sm'>
+			<h3 className='text-sm font-medium text-slate-700 mb-3'>
 				Photo Tray ({photos.length} {photos.length === 1 ? 'photo' : 'photos'})
 			</h3>
 			<div className='flex gap-2 overflow-x-auto pb-2'>
@@ -457,8 +457,14 @@ export default function AlbumEditorPage() {
 		// Handle page reordering
 		if (active.id.toString().startsWith('page-') && over.id.toString().startsWith('page-')) {
 			// Extract index from ID (format: "page-0", "page-1", etc.)
-			const oldIndex = parseInt(active.id.toString().replace('page-', ''));
-			const newIndex = parseInt(over.id.toString().replace('page-', ''));
+			const oldIndex = parseInt(active.id.toString().replace('page-', ''), 10);
+			const newIndex = parseInt(over.id.toString().replace('page-', ''), 10);
+
+			// Validate indices are valid numbers
+			if (isNaN(oldIndex) || isNaN(newIndex)) {
+				console.warn(`Invalid page indices: oldIndex=${oldIndex}, newIndex=${newIndex}`);
+				return;
+			}
 
 			if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
 				// Filter out empty pages before reordering (only reorder pages with photos)
@@ -466,7 +472,7 @@ export default function AlbumEditorPage() {
 				const emptyPages = currentPages.filter(p => !p.photo);
 				
 				// Only reorder if both indices are within the pagesWithPhotos array
-				if (oldIndex < pagesWithPhotos.length && newIndex < pagesWithPhotos.length) {
+				if (oldIndex >= 0 && newIndex >= 0 && oldIndex < pagesWithPhotos.length && newIndex < pagesWithPhotos.length) {
 					const reorderedPhotos = arrayMove(pagesWithPhotos, oldIndex, newIndex);
 					// Normalize pages (update positions and add one empty page at end)
 					const normalizedPages = normalizePages(reorderedPhotos);
@@ -492,16 +498,20 @@ export default function AlbumEditorPage() {
 			let pageIndex: number;
 			if (over.id.toString().startsWith('book-page-')) {
 				// For book page, find by position
-				const pagePosition = parseInt(over.id.toString().replace('book-page-', ''));
+				const pagePosition = parseInt(over.id.toString().replace('book-page-', ''), 10);
+				if (isNaN(pagePosition)) {
+					console.warn(`Invalid page position: ${over.id.toString()}`);
+					return;
+				}
 				pageIndex = currentPages.findIndex(p => p.position === pagePosition);
 			} else {
 				// For thumbnails, use index directly
-				pageIndex = parseInt(over.id.toString().replace('page-', ''));
+				pageIndex = parseInt(over.id.toString().replace('page-', ''), 10);
 			}
 
-			// Validate pageIndex is valid
-			if (pageIndex === -1 || pageIndex < 0 || pageIndex >= currentPages.length) {
-				console.warn(`Invalid pageIndex: ${pageIndex}, pages length: ${currentPages.length}`);
+			// Validate pageIndex is valid (check for NaN, -1, or out of bounds)
+			if (isNaN(pageIndex) || pageIndex === -1 || pageIndex < 0 || pageIndex >= currentPages.length) {
+				console.warn(`Invalid pageIndex: ${pageIndex}, pages length: ${currentPages.length}, over.id: ${over.id?.toString()}`);
 				return;
 			}
 
@@ -730,20 +740,20 @@ export default function AlbumEditorPage() {
 
 	if (isLoading) {
 		return (
-			<div className='min-h-screen flex items-center justify-center'>
-				<div className='text-gray-600'>Loading album...</div>
+			<div className='min-h-screen flex items-center justify-center bg-slate-50'>
+				<div className='text-slate-600 bg-white rounded-xl border border-slate-200 shadow-sm px-8 py-6'>Loading album...</div>
 			</div>
 		);
 	}
 
 	if (error || !album) {
 		return (
-			<div className='min-h-screen p-8'>
+			<div className='min-h-screen bg-slate-50 p-8'>
 				<div className='max-w-4xl mx-auto'>
-					<div className='text-red-600 mb-4'>{error || 'Album not found'}</div>
+					<div className='text-red-600 mb-4 bg-red-50 border border-red-200 rounded-lg p-4'>{error || 'Album not found'}</div>
 					<button
 						onClick={() => router.push(`/events/${eventId}`)}
-						className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50'>
+						className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors'>
 						Back to Event
 					</button>
 				</div>
@@ -761,32 +771,32 @@ export default function AlbumEditorPage() {
 			collisionDetection={closestCenter}
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}>
-			<div className='min-h-screen flex flex-col bg-gray-50'>
+			<div className='min-h-screen flex flex-col bg-slate-50'>
 				{/* Actions Header */}
-				<div className='bg-white border-b border-gray-200 p-4'>
+				<div className='bg-white border-b border-slate-200 p-4 shadow-sm'>
 					<div className='max-w-6xl mx-auto flex justify-between items-center'>
 						<div>
 							<button
 								onClick={() => router.push(`/events/${eventId}`)}
-								className='text-blue-600 hover:text-blue-700 mb-2 text-sm'>
+								className='text-blue-600 hover:text-blue-700 mb-2 text-sm font-medium transition-colors'>
 								← Back to Event
 							</button>
 							<div className='flex items-center gap-4'>
-								<h1 className='text-xl font-semibold'>{album.title}</h1>
+								<h1 className='text-2xl font-semibold text-slate-900'>{album.title}</h1>
 								{!isLocked && (
 									<button
 										onClick={() => router.push(`/events/${eventId}/photos`)}
-										className='text-sm text-blue-600 hover:text-blue-700 underline'>
+										className='text-sm text-blue-600 hover:text-blue-700 underline font-medium'>
 										Approve Photos
 									</button>
 								)}
 							</div>
 							<div>
-								<p className='text-sm text-gray-600'>
-									Status: <span className='capitalize'>{album.status}</span>
-									{isLocked && <span className='ml-2 text-orange-600'>(Locked)</span>}
+								<p className='text-sm text-slate-600'>
+									Status: <span className='capitalize font-medium'>{album.status}</span>
+									{isLocked && <span className='ml-2 text-orange-600 font-medium'>(Locked)</span>}
 								</p>
-								{canPrint && !pdfUrl && <p className='text-xs text-gray-500 mt-1'>PDF not ready yet</p>}
+								{canPrint && !pdfUrl && <p className='text-xs text-slate-500 mt-1'>PDF not ready yet</p>}
 							</div>
 						</div>
 						<div className='flex gap-2'>
@@ -795,13 +805,13 @@ export default function AlbumEditorPage() {
 									<button
 										onClick={handlePreview}
 										disabled={isPreviewing || pages.filter(p => p.photo).length === 0}
-										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+										className='px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm'>
 										{isPreviewing ? 'Generating Preview...' : 'Preview Album'}
 									</button>
 									<button
 										onClick={() => setShowFinalizeConfirm(true)}
 										disabled={pages.filter(p => p.photo).length === 0}
-										className='px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+										className='px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm'>
 										Finalize Album
 									</button>
 								</>
@@ -818,7 +828,7 @@ export default function AlbumEditorPage() {
 											}
 										}}
 										disabled={!pdfUrl}
-										className='px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'>
+										className='px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors'>
 										Preview Album (PDF)
 									</button>
 									{pdfUrl && (
@@ -829,20 +839,20 @@ export default function AlbumEditorPage() {
 													: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${pdfUrl}`
 											}
 											download
-											className='px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 inline-block text-center'>
+											className='px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 inline-block text-center font-medium transition-colors'>
 											Download PDF
 										</a>
 									)}
 									{!pdfUrl && (
 										<button
 											disabled
-											className='px-4 py-2 border border-gray-300 text-gray-700 rounded-md opacity-50 cursor-not-allowed'>
+											className='px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg opacity-50 cursor-not-allowed font-medium'>
 											Download PDF
 										</button>
 									)}
 									<button
 										onClick={() => setShowPrintModal(true)}
-										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>
+										className='px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm'>
 										Print Album
 									</button>
 								</>
@@ -852,22 +862,22 @@ export default function AlbumEditorPage() {
 				</div>
 
 				{showFinalizeConfirm && (
-					<div className='bg-yellow-50 border-b border-yellow-200 p-4'>
+					<div className='bg-yellow-50 border-b border-yellow-200 p-4 shadow-sm'>
 						<div className='max-w-6xl mx-auto'>
-							<p className='text-yellow-800 mb-3'>
+							<p className='text-yellow-800 mb-4 font-medium'>
 								Are you sure you want to finalize this album? This will lock all edits and cannot be undone.
 							</p>
-							<div className='flex gap-2'>
+							<div className='flex gap-3'>
 								<button
 									onClick={handleFinalize}
 									disabled={isFinalizing}
-									className='px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50'>
+									className='px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium transition-colors shadow-sm'>
 									{isFinalizing ? 'Finalizing...' : 'Yes, Finalize'}
 								</button>
 								<button
 									onClick={() => setShowFinalizeConfirm(false)}
 									disabled={isFinalizing}
-									className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50'>
+									className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors text-slate-700 bg-white'>
 									Cancel
 								</button>
 							</div>
@@ -877,26 +887,26 @@ export default function AlbumEditorPage() {
 
 				{showPrintModal && (
 					<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-						<div className='bg-white rounded-lg max-w-lg w-full p-6'>
-							<h2 className='text-xl font-semibold mb-4'>Print Album</h2>
-							<p className='text-red-600 mb-4 font-medium'>
+						<div className='bg-white rounded-xl max-w-lg w-full p-6 shadow-xl'>
+							<h2 className='text-2xl font-semibold mb-4 text-slate-900'>Print Album</h2>
+							<p className='text-red-600 mb-4 font-medium bg-red-50 border border-red-200 rounded-lg p-3'>
 								This action is irreversible. Once you confirm, the album will be sent to print and cannot be modified.
 							</p>
 							<div className='space-y-4 mb-6'>
 								<div>
-									<label className='block text-sm font-medium text-gray-700 mb-1'>Album Title</label>
-									<p className='text-gray-900'>{album?.title}</p>
+									<label className='block text-sm font-medium text-slate-700 mb-1'>Album Title</label>
+									<p className='text-slate-900'>{album?.title}</p>
 								</div>
 								<div>
-									<label className='block text-sm font-medium text-gray-700 mb-1'>Event</label>
-									<p className='text-gray-900'>{event?.title || 'Loading...'}</p>
+									<label className='block text-sm font-medium text-slate-700 mb-1'>Event</label>
+									<p className='text-slate-900'>{event?.title || 'Loading...'}</p>
 								</div>
 								<div>
-									<label className='block text-sm font-medium text-gray-700 mb-1'>Print Format</label>
-									<p className='text-gray-900'>Square 20×20 cm</p>
+									<label className='block text-sm font-medium text-slate-700 mb-1'>Print Format</label>
+									<p className='text-slate-900'>Square 20×20 cm</p>
 								</div>
 								<div>
-									<label className='block text-sm font-medium text-gray-700 mb-1'>
+									<label className='block text-sm font-medium text-slate-700 mb-2'>
 										Shipping Address <span className='text-red-600'>*</span>
 									</label>
 									<textarea
@@ -904,24 +914,24 @@ export default function AlbumEditorPage() {
 										onChange={e => setShippingAddress(e.target.value)}
 										placeholder='Enter full shipping address...'
 										rows={4}
-										className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+										className='w-full border border-slate-300 rounded-lg px-4 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors'
 									/>
 								</div>
 							</div>
-							<div className='flex gap-2 justify-end'>
+							<div className='flex gap-3 justify-end'>
 								<button
 									onClick={() => {
 										setShowPrintModal(false);
 										setShippingAddress('');
 									}}
 									disabled={isPrinting}
-									className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50'>
+									className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 font-medium transition-colors text-slate-700 bg-white'>
 									Cancel
 								</button>
 								<button
 									onClick={handlePrint}
 									disabled={isPrinting || !shippingAddress.trim()}
-									className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+									className='px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors shadow-sm'>
 									{isPrinting ? 'Processing...' : 'Confirm & Print'}
 								</button>
 							</div>
@@ -930,7 +940,7 @@ export default function AlbumEditorPage() {
 				)}
 
 				{isReordering && (
-					<div className='bg-blue-50 border-b border-blue-200 p-2 text-center text-sm text-blue-800'>
+					<div className='bg-blue-50 border-b border-blue-200 p-3 text-center text-sm text-blue-800 font-medium'>
 						Saving changes...
 					</div>
 				)}
@@ -954,16 +964,16 @@ export default function AlbumEditorPage() {
 							<button
 								onClick={handlePreviousPage}
 								disabled={currentPageIndex === 0 || isLocked}
-								className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'>
+								className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors'>
 								← Previous
 							</button>
-							<div className='text-sm text-gray-600'>
+							<div className='text-sm text-slate-600 font-medium'>
 								Page {currentPageIndex + 1} of {pages.length}
 							</div>
 							<button
 								onClick={handleNextPage}
 								disabled={currentPageIndex === pages.length - 1 || isLocked}
-								className='px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'>
+								className='px-5 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors'>
 								Next →
 							</button>
 						</div>
